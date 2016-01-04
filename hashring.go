@@ -217,6 +217,13 @@ func (h *HashRing) RemoveNode(node string) *HashRing {
 	return hashRing
 }
 
+func (h *HashRing) NodeList() []string {
+	nodes := make([]string, len(h.nodes))
+
+	copy(nodes, h.nodes)
+	return nodes
+}
+
 func (h *HashRing) hashDigest(s string) []byte {
 	hasher := h.hashProvider()
 	hasher.Write([]byte(s))

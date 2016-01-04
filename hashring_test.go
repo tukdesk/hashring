@@ -430,3 +430,15 @@ func TestAddRemoveNode(t *testing.T) {
 	expectNodesABC(t, hashRing)
 	expectNodeRangesABC(t, hashRing)
 }
+
+func TestNodeList(t *testing.T) {
+	nodes := []string{"a", "b", "c"}
+	hashRing := New(nodes, nil)
+
+	nodeList := hashRing.NodeList()
+	for i, node := range nodes {
+		if got := nodeList[i]; got != node {
+			t.Errorf("expected node: %s, got %s", node, got)
+		}
+	}
+}
