@@ -52,7 +52,7 @@ func expectNodesABCD(t *testing.T, hashRing *HashRing) {
 
 func TestNew(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	expectNodesABC(t, hashRing)
 	expectNodeRangesABC(t, hashRing)
@@ -60,7 +60,7 @@ func TestNew(t *testing.T) {
 
 func TestNewEmpty(t *testing.T) {
 	nodes := []string{}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	node, ok := hashRing.GetNode("test")
 	if ok || node != "" {
@@ -75,7 +75,7 @@ func TestNewEmpty(t *testing.T) {
 
 func TestForMoreNodes(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	nodes, ok := hashRing.GetNodes("test", 5)
 	if ok || !(len(nodes) == 0) {
@@ -85,7 +85,7 @@ func TestForMoreNodes(t *testing.T) {
 
 func TestForEqualNodes(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	nodes, ok := hashRing.GetNodes("test", 3)
 	if !ok && (len(nodes) == 3) {
@@ -95,7 +95,7 @@ func TestForEqualNodes(t *testing.T) {
 
 func TestNewSingle(t *testing.T) {
 	nodes := []string{"a"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	expectNode(t, hashRing, "test", "a")
 	expectNode(t, hashRing, "test", "a")
@@ -119,7 +119,7 @@ func TestNewWeighted(t *testing.T) {
 	weights["a"] = 1
 	weights["b"] = 2
 	weights["c"] = 1
-	hashRing := NewWithWeights(weights)
+	hashRing := NewWithWeights(weights, nil)
 
 	expectNode(t, hashRing, "test", "b")
 	expectNode(t, hashRing, "test", "b")
@@ -136,7 +136,7 @@ func TestNewWeighted(t *testing.T) {
 
 func TestRemoveNode(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 	hashRing = hashRing.RemoveNode("b")
 
 	expectNode(t, hashRing, "test", "a")
@@ -154,7 +154,7 @@ func TestRemoveNode(t *testing.T) {
 
 func TestAddNode(t *testing.T) {
 	nodes := []string{"a", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 	hashRing = hashRing.AddNode("b")
 
 	expectNodesABC(t, hashRing)
@@ -162,7 +162,7 @@ func TestAddNode(t *testing.T) {
 
 func TestAddNode2(t *testing.T) {
 	nodes := []string{"a", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 	hashRing = hashRing.AddNode("b")
 	hashRing = hashRing.AddNode("b")
 
@@ -172,7 +172,7 @@ func TestAddNode2(t *testing.T) {
 
 func TestAddNode3(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 	hashRing = hashRing.AddNode("d")
 
 	// Somehow adding d does not load balance these keys...
@@ -209,7 +209,7 @@ func TestAddNode3(t *testing.T) {
 
 func TestDuplicateNodes(t *testing.T) {
 	nodes := []string{"a", "a", "a", "a", "b"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	expectNode(t, hashRing, "test", "a")
 	expectNode(t, hashRing, "test", "a")
@@ -224,7 +224,7 @@ func TestDuplicateNodes(t *testing.T) {
 
 func TestAddWeightedNode(t *testing.T) {
 	nodes := []string{"a", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 	hashRing = hashRing.AddWeightedNode("b", 0)
 	hashRing = hashRing.AddWeightedNode("b", 2)
 	hashRing = hashRing.AddWeightedNode("b", 2)
@@ -244,7 +244,7 @@ func TestAddWeightedNode(t *testing.T) {
 
 func TestRemoveAddNode(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 
 	expectNodesABC(t, hashRing)
 	expectNodeRangesABC(t, hashRing)
@@ -282,7 +282,7 @@ func TestRemoveAddWeightedNode(t *testing.T) {
 	weights["a"] = 1
 	weights["b"] = 2
 	weights["c"] = 1
-	hashRing := NewWithWeights(weights)
+	hashRing := NewWithWeights(weights, nil)
 
 	expectNode(t, hashRing, "test", "b")
 	expectNode(t, hashRing, "test", "b")
@@ -329,7 +329,7 @@ func TestRemoveAddWeightedNode(t *testing.T) {
 
 func TestAddRemoveNode(t *testing.T) {
 	nodes := []string{"a", "b", "c"}
-	hashRing := New(nodes)
+	hashRing := New(nodes, nil)
 	hashRing = hashRing.AddNode("d")
 
 	// Somehow adding d does not load balance these keys...
