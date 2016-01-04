@@ -3,6 +3,7 @@ package hashring
 import (
 	"crypto/md5"
 	"fmt"
+	"hash"
 	"math"
 	"sort"
 )
@@ -15,33 +16,37 @@ func (h HashKeyOrder) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 func (h HashKeyOrder) Less(i, j int) bool { return h[i] < h[j] }
 
 type HashRing struct {
-	ring       map[HashKey]string
-	sortedKeys []HashKey
-	nodes      []string
-	weights    map[string]int
+	ring         map[HashKey]string
+	hashProvider func() hash.Hash
+	sortedKeys   []HashKey
+	nodes        []string
+	weights      map[string]int
 }
 
-func New(nodes []string) *HashRing {
+func New(nodes []string, hashProvider func() hash.Hash) *HashRing {
 	hashRing := &HashRing{
-		ring:       make(map[HashKey]string),
-		sortedKeys: make([]HashKey, 0),
-		nodes:      nodes,
-		weights:    make(map[string]int),
+		ring:         make(map[HashKey]string),
+		hashProvider: hashProvider,
+		sortedKeys:   make([]HashKey, 0),
+		nodes:        nodes,
+		weights:      make(map[string]int),
 	}
+
 	hashRing.generateCircle()
 	return hashRing
 }
 
-func NewWithWeights(weights map[string]int) *HashRing {
+func NewWithWeights(weights map[string]int, hashProvider func() hash.Hash) *HashRing {
 	nodes := make([]string, 0, len(weights))
 	for node, _ := range weights {
 		nodes = append(nodes, node)
 	}
 	hashRing := &HashRing{
-		ring:       make(map[HashKey]string),
-		sortedKeys: make([]HashKey, 0),
-		nodes:      nodes,
-		weights:    weights,
+		ring:         make(map[HashKey]string),
+		hashProvider: hashProvider,
+		sortedKeys:   make([]HashKey, 0),
+		nodes:        nodes,
+		weights:      weights,
 	}
 	hashRing.generateCircle()
 	return hashRing
@@ -68,7 +73,7 @@ func (h *HashRing) generateCircle() {
 
 		for j := 0; j < int(factor); j++ {
 			nodeKey := fmt.Sprintf("%s-%d", node, j)
-			bKey := hashDigest(nodeKey)
+			bKey := h.hashDigest(nodeKey)
 
 			for i := 0; i < 3; i++ {
 				key := hashVal(bKey[i*4 : i*4+4])
@@ -108,7 +113,7 @@ func (h *HashRing) GetNodePos(stringKey string) (pos int, ok bool) {
 }
 
 func (h *HashRing) GenKey(key string) HashKey {
-	bKey := hashDigest(key)
+	bKey := h.hashDigest(key)
 	return hashVal(bKey[0:4])
 }
 
@@ -200,6 +205,16 @@ func (h *HashRing) RemoveNode(node string) *HashRing {
 	return hashRing
 }
 
+func (h *HashRing) hashDigest(s string) []byte {
+	if h.hashProvider == nil {
+		h.hashProvider = defaultHashProvider
+	}
+
+	hasher := h.hashProvider()
+	hasher.Write([]byte(s))
+	return hasher.Sum(nil)
+}
+
 func hashVal(bKey []byte) HashKey {
 	return ((HashKey(bKey[3]) << 24) |
 		(HashKey(bKey[2]) << 16) |
@@ -207,8 +222,6 @@ func hashVal(bKey []byte) HashKey {
 		(HashKey(bKey[0])))
 }
 
-func hashDigest(key string) []byte {
-	m := md5.New()
-	m.Write([]byte(key))
-	return m.Sum(nil)
+func defaultHashProvider() hash.Hash {
+	return md5.New()
 }
