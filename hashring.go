@@ -24,6 +24,10 @@ type HashRing struct {
 }
 
 func New(nodes []string, hashProvider func() hash.Hash) *HashRing {
+	if hashProvider == nil {
+		hashProvider = defaultHashProvider
+	}
+
 	hashRing := &HashRing{
 		ring:         make(map[HashKey]string),
 		hashProvider: hashProvider,
@@ -41,6 +45,11 @@ func NewWithWeights(weights map[string]int, hashProvider func() hash.Hash) *Hash
 	for node, _ := range weights {
 		nodes = append(nodes, node)
 	}
+
+	if hashProvider == nil {
+		hashProvider = defaultHashProvider
+	}
+
 	hashRing := &HashRing{
 		ring:         make(map[HashKey]string),
 		hashProvider: hashProvider,
@@ -48,6 +57,7 @@ func NewWithWeights(weights map[string]int, hashProvider func() hash.Hash) *Hash
 		nodes:        nodes,
 		weights:      weights,
 	}
+
 	hashRing.generateCircle()
 	return hashRing
 }
@@ -171,10 +181,11 @@ func (h *HashRing) AddWeightedNode(node string, weight int) *HashRing {
 	weights[node] = weight
 
 	hashRing := &HashRing{
-		ring:       make(map[HashKey]string),
-		sortedKeys: make([]HashKey, 0),
-		nodes:      nodes,
-		weights:    weights,
+		ring:         make(map[HashKey]string),
+		hashProvider: h.hashProvider,
+		sortedKeys:   make([]HashKey, 0),
+		nodes:        nodes,
+		weights:      weights,
 	}
 	hashRing.generateCircle()
 	return hashRing
@@ -196,20 +207,17 @@ func (h *HashRing) RemoveNode(node string) *HashRing {
 	}
 
 	hashRing := &HashRing{
-		ring:       make(map[HashKey]string),
-		sortedKeys: make([]HashKey, 0),
-		nodes:      nodes,
-		weights:    weights,
+		ring:         make(map[HashKey]string),
+		hashProvider: h.hashProvider,
+		sortedKeys:   make([]HashKey, 0),
+		nodes:        nodes,
+		weights:      weights,
 	}
 	hashRing.generateCircle()
 	return hashRing
 }
 
 func (h *HashRing) hashDigest(s string) []byte {
-	if h.hashProvider == nil {
-		h.hashProvider = defaultHashProvider
-	}
-
 	hasher := h.hashProvider()
 	hasher.Write([]byte(s))
 	return hasher.Sum(nil)
